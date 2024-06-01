@@ -47,44 +47,48 @@ static void render(void);
 static void frame_throttle(void);
 static void save_window_size(void);
 
-int application_init(const char* rom_file, const char* symbol_file)
-{
+int application_init(const char* rom_file, const char* symbol_file) {
     Log ("<·> %s %s Desktop App <·>", GEARSYSTEM_TITLE, GEARSYSTEM_VERSION);
-
+    
     config_init();
     config_read();
-
+    
     int ret = sdl_init();
+    if (ret != 0) {
+        Log("Failed to initialize SDL");
+        return ret;
+    }
+    
     emu_init();
-
-    strcpy(emu_savefiles_path, config_emulator.savefiles_path.c_str());
-    strcpy(emu_savestates_path, config_emulator.savestates_path.c_str());
+    
+    strncpy(emu_savefiles_path, config_emulator.savefiles_path.c_str(), sizeof(emu_savefiles_path) - 1);
+    emu_savefiles_path[sizeof(emu_savefiles_path) - 1] = '\0';
+    strncpy(emu_savestates_path, config_emulator.savestates_path.c_str(), sizeof(emu_savestates_path) - 1);
+    emu_savestates_path[sizeof(emu_savestates_path) - 1] = '\0';
     emu_savefiles_dir_option = config_emulator.savefiles_dir_option;
     emu_savestates_dir_option = config_emulator.savestates_dir_option;
-
+    
     gui_init();
-
+    
     ImGui_ImplSDL2_InitForOpenGL(sdl_window, gl_context);
-
+    
     renderer_init();
-
+    
     SDL_GL_SetSwapInterval(config_video.sync ? 1 : 0);
-
+    
     if (config_emulator.fullscreen)
         application_trigger_fullscreen(true);
-
-    if (IsValidPointer(rom_file) && (strlen(rom_file) > 0))
-    {
-        Log ("Rom file argument: %s", rom_file);
+    
+    if (IsValidPointer(rom_file) && (strlen(rom_file) > 0)) {
+        Log("Rom file argument: %s", rom_file);
         gui_load_rom(rom_file);
     }
-    if (IsValidPointer(symbol_file) && (strlen(symbol_file) > 0))
-    {
-        Log ("Symbol file argument: %s", symbol_file);
+    if (IsValidPointer(symbol_file) && (strlen(symbol_file) > 0)) {
+        Log("Symbol file argument: %s", symbol_file);
         gui_debug_reset_symbols();
         gui_debug_load_symbols_file(symbol_file);
     }
-
+    
     return ret;
 }
 
